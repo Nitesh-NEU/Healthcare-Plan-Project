@@ -120,7 +120,7 @@ A comprehensive data engineering platform for healthcare plan management, featur
 
 1. **Clone and Install Dependencies**
 ```bash
-cd "ABD-NodeJS-RestAPI-main"
+cd "Healthcare-Plan-Project-main"
 npm install
 ```
 
