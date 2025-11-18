@@ -1,4 +1,4 @@
-# ADB-NodeJS-RestAPI# Healthcare Plan Data Engineering Platform
+# Healthcare Plan Data Engineering Platform
 
 ## 🏗️ Architecture Overview
 
