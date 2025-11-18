@@ -27,7 +27,7 @@
     "Real-time Processing",
     "Data Quality"
   ],
-  "author": "Venkat Pavan Munaganti",
+  "author": "Nitesh More",
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.3.10",
