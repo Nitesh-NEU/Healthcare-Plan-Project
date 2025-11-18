@@ -1,0 +1,283 @@
+version: '3.8'
+services:
+  # ===== EXISTING SERVICES =====
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: elasticsearch
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - ${ES_PORT}:9200
+    restart: always
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - data-engineering-net
+  
+  kibana:
+    depends_on:
+      - elasticsearch
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: kibana
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+    ports:
+     - ${KIBANA_PORT}:5601
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - data-engineering-net
+
+  rabbit:
+    image: rabbitmq:management-alpine
+    container_name: RabbitMQ
+    ports:
+      - 5672:5672
+      - 15672:15672
+    restart: always
+    networks:
+      - data-engineering-net
+
+  # ===== DATA WAREHOUSE =====
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-warehouse
+    environment:
+      POSTGRES_USER: dataeng
+      POSTGRES_PASSWORD: dataeng123
+      POSTGRES_DB: healthcare_dw
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    restart: always
+    networks:
+      - data-engineering-net
+
+  # ===== KAFKA CLUSTER =====
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    restart: always
+    networks:
+      - data-engineering-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    restart: always
+    networks:
+      - data-engineering-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: always
+    networks:
+      - data-engineering-net
+
+  # ===== APACHE SPARK =====
+  spark-master:
+    image: bitnami/spark:3.5.0
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8081:8080"
+      - "7077:7077"
+    volumes:
+      - spark-apps:/opt/spark-apps
+      - spark-data:/opt/spark-data
+    restart: always
+    networks:
+      - data-engineering-net
+
+  spark-worker:
+    image: bitnami/spark:3.5.0
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    volumes:
+      - spark-apps:/opt/spark-apps
+      - spark-data:/opt/spark-data
+    restart: always
+    networks:
+      - data-engineering-net
+
+  # ===== APACHE AIRFLOW =====
+  airflow-postgres:
+    image: postgres:15-alpine
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres-data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - data-engineering-net
+
+  airflow-webserver:
+    image: apache/airflow:2.7.3
+    container_name: airflow-webserver
+    depends_on:
+      - airflow-postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - airflow-data:/opt/airflow
+    ports:
+      - "8082:8080"
+    command: webserver
+    restart: always
+    networks:
+      - data-engineering-net
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.3
+    container_name: airflow-scheduler
+    depends_on:
+      - airflow-postgres
+      - airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - airflow-data:/opt/airflow
+    command: scheduler
+    restart: always
+    networks:
+      - data-engineering-net
+
+  # ===== APACHE SUPERSET =====
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    depends_on:
+      - postgres
+    environment:
+      SUPERSET_SECRET_KEY: 'your-secret-key-change-this-in-production'
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset-data:/app/superset_home
+    command: >
+      bash -c "superset db upgrade &&
+               superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin &&
+               superset init &&
+               superset run -h 0.0.0.0 -p 8088"
+    restart: always
+    networks:
+      - data-engineering-net
+
+  # ===== REDIS (for caching & job queues) =====
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+    networks:
+      - data-engineering-net
+
+networks:
+  data-engineering-net:
+    driver: bridge
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  kibana-data:
+    driver: local
+  postgres-data:
+    driver: local
+  airflow-postgres-data:
+    driver: local
+  airflow-data:
+    driver: local
+  zookeeper-data:
+    driver: local
+  zookeeper-logs:
+    driver: local
+  kafka-data:
+    driver: local
+  spark-apps:
+    driver: local
+  spark-data:
+    driver: local
+  superset-data:
+    driver: local
+  redis-data:
+    driver: local

@@ -1,0 +1,535 @@
+    {
+        "info": {
+            "_postman_id": "healthcare-plan-api",
+            "name": "Healthcare Plan API - Complete Test Suite",
+            "description": "Complete API testing collection for Healthcare Plan Management System with OAuth, MongoDB, RabbitMQ, and Elasticsearch",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+        },
+        "auth": {
+            "type": "bearer",
+            "bearer": [
+                {
+                    "key": "token",
+                    "value": "{{OAUTH_TOKEN}}",
+                    "type": "string"
+                }
+            ]
+        },
+        "variable": [
+            {
+                "key": "BASE_URL",
+                "value": "http://localhost:3000",
+                "type": "string"
+            },
+            {
+                "key": "OAUTH_TOKEN",
+                "value": "YOUR_GOOGLE_OAUTH_ID_TOKEN_HERE",
+                "type": "string"
+            },
+            {
+                "key": "planId",
+                "value": "12xvxc345ssdsds-508",
+                "type": "string"
+            },
+            {
+                "key": "etag",
+                "value": "",
+                "type": "string"
+            }
+        ],
+        "item": [
+            {
+                "name": "1. Health Check",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "auth": {
+                        "type": "noauth"
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/healthz",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "healthz"]
+                    },
+                    "description": "Health check endpoint - No authentication required"
+                },
+                "response": []
+            },
+            {
+                "name": "2. Create Plan",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 201\", function () {",
+                                "    pm.response.to.have.status(201);",
+                                "});",
+                                "",
+                                "pm.test(\"Response has ETag\", function () {",
+                                "    pm.response.to.have.header(\"ETag\");",
+                                "    pm.collectionVariables.set(\"etag\", pm.response.headers.get(\"ETag\"));",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Plan has objectId\", function () {",
+                                "    pm.expect(jsonData.objectId).to.exist;",
+                                "    pm.collectionVariables.set(\"planId\", jsonData.objectId);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"_org\": \"example.com\",\n    \"objectId\": \"12xvxc345ssdsds-508\",\n    \"objectType\": \"plan\",\n    \"planType\": \"inNetwork\",\n    \"creationDate\": \"2017-12-12\",\n    \"planCostShares\": {\n        \"deductible\": 2000,\n        \"_org\": \"example.com\",\n        \"copay\": 23,\n        \"objectId\": \"1234vxc2324sdf-501\",\n        \"objectType\": \"membercostshare\"\n    },\n    \"linkedPlanServices\": [\n        {\n            \"_org\": \"example.com\",\n            \"objectId\": \"27283xvx9asdff-504\",\n            \"objectType\": \"planservice\",\n            \"linkedService\": {\n                \"_org\": \"example.com\",\n                \"objectId\": \"1234520xvc30asdf-502\",\n                \"objectType\": \"service\",\n                \"name\": \"Yearly physical\"\n            },\n            \"planserviceCostShares\": {\n                \"deductible\": 10,\n                \"_org\": \"example.com\",\n                \"copay\": 0,\n                \"objectId\": \"1234512xvc1314asdfs-503\",\n                \"objectType\": \"membercostshare\"\n            }\n        },\n        {\n            \"_org\": \"example.com\",\n            \"objectId\": \"27283xvx9sdf-507\",\n            \"objectType\": \"planservice\",\n            \"linkedService\": {\n                \"_org\": \"example.com\",\n                \"objectId\": \"1234520xvc30sfs-505\",\n                \"objectType\": \"service\",\n                \"name\": \"well baby\"\n            },\n            \"planserviceCostShares\": {\n                \"deductible\": 10,\n                \"_org\": \"example.com\",\n                \"copay\": 175,\n                \"objectId\": \"1234512xvc1314sdfsd-506\",\n                \"objectType\": \"membercostshare\"\n            }\n        }\n    ]\n}"
+                    },
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan"]
+                    },
+                    "description": "Create a new healthcare plan - Requires OAuth token"
+                },
+                "response": []
+            },
+            {
+                "name": "3. Get Plan by ID",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "pm.test(\"Response has ETag\", function () {",
+                                "    pm.response.to.have.header(\"ETag\");",
+                                "    pm.collectionVariables.set(\"etag\", pm.response.headers.get(\"ETag\"));",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan/{{planId}}",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan", "{{planId}}"]
+                    },
+                    "description": "Retrieve a specific plan by ID"
+                },
+                "response": []
+            },
+            {
+                "name": "4. Get Plan with ETag (304 Test)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 304 Not Modified\", function () {",
+                                "    pm.response.to.have.status(304);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "If-None-Match",
+                            "value": "{{etag}}",
+                            "type": "text"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan/{{planId}}",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan", "{{planId}}"]
+                    },
+                    "description": "Test ETag caching - Should return 304 if plan hasn't changed"
+                },
+                "response": []
+            },
+            {
+                "name": "5. Get All Plans",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Response has message array\", function () {",
+                                "    pm.expect(jsonData.message).to.be.an('array');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan"]
+                    },
+                    "description": "Retrieve all plans"
+                },
+                "response": []
+            },
+            {
+                "name": "6. Update Plan (PUT)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "pm.test(\"New ETag is different\", function () {",
+                                "    var newEtag = pm.response.headers.get(\"ETag\");",
+                                "    pm.expect(newEtag).to.not.equal(pm.collectionVariables.get(\"etag\"));",
+                                "    pm.collectionVariables.set(\"etag\", newEtag);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "PUT",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "key": "If-Match",
+                            "value": "{{etag}}",
+                            "type": "text"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"_org\": \"example.com\",\n    \"objectId\": \"12xvxc345ssdsds-508\",\n    \"objectType\": \"plan\",\n    \"planType\": \"outOfNetwork\",\n    \"creationDate\": \"2017-12-12\",\n    \"planCostShares\": {\n        \"deductible\": 3000,\n        \"_org\": \"example.com\",\n        \"copay\": 50,\n        \"objectId\": \"1234vxc2324sdf-501\",\n        \"objectType\": \"membercostshare\"\n    },\n    \"linkedPlanServices\": [\n        {\n            \"_org\": \"example.com\",\n            \"objectId\": \"27283xvx9asdff-504\",\n            \"objectType\": \"planservice\",\n            \"linkedService\": {\n                \"_org\": \"example.com\",\n                \"objectId\": \"1234520xvc30asdf-502\",\n                \"objectType\": \"service\",\n                \"name\": \"Yearly physical\"\n            },\n            \"planserviceCostShares\": {\n                \"deductible\": 10,\n                \"_org\": \"example.com\",\n                \"copay\": 0,\n                \"objectId\": \"1234512xvc1314asdfs-503\",\n                \"objectType\": \"membercostshare\"\n            }\n        },\n        {\n            \"_org\": \"example.com\",\n            \"objectId\": \"27283xvx9sdf-507\",\n            \"objectType\": \"planservice\",\n            \"linkedService\": {\n                \"_org\": \"example.com\",\n                \"objectId\": \"1234520xvc30sfs-505\",\n                \"objectType\": \"service\",\n                \"name\": \"well baby\"\n            },\n            \"planserviceCostShares\": {\n                \"deductible\": 10,\n                \"_org\": \"example.com\",\n                \"copay\": 175,\n                \"objectId\": \"1234512xvc1314sdfsd-506\",\n                \"objectType\": \"membercostshare\"\n            }\n        }\n    ]\n}"
+                    },
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan/{{planId}}",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan", "{{planId}}"]
+                    },
+                    "description": "Update an existing plan - Requires If-Match header with ETag"
+                },
+                "response": []
+            },
+            {
+                "name": "7. Update Without ETag (412 Test)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 412 Precondition Failed\", function () {",
+                                "    pm.response.to.have.status(412);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "PUT",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "key": "If-Match",
+                            "value": "wrong-etag-value",
+                            "type": "text"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"_org\": \"example.com\",\n    \"objectId\": \"12xvxc345ssdsds-508\",\n    \"objectType\": \"plan\",\n    \"planType\": \"outOfNetwork\",\n    \"creationDate\": \"2017-12-12\",\n    \"planCostShares\": {\n        \"deductible\": 3000,\n        \"_org\": \"example.com\",\n        \"copay\": 50,\n        \"objectId\": \"1234vxc2324sdf-501\",\n        \"objectType\": \"membercostshare\"\n    },\n    \"linkedPlanServices\": []\n}"
+                    },
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan/{{planId}}",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan", "{{planId}}"]
+                    },
+                    "description": "Test optimistic locking - Should fail with 412 if ETag is wrong"
+                },
+                "response": []
+            },
+            {
+                "name": "8. Patch - Add Linked Services",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has more linked services\", function () {",
+                                "    pm.expect(jsonData.linkedPlanServices).to.be.an('array');",
+                                "    pm.expect(jsonData.linkedPlanServices.length).to.be.above(0);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "PATCH",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "key": "If-Match",
+                            "value": "{{etag}}",
+                            "type": "text"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"linkedPlanServices\": [\n        {\n            \"_org\": \"example.com\",\n            \"objectId\": \"NEW-SERVICE-001\",\n            \"objectType\": \"planservice\",\n            \"linkedService\": {\n                \"_org\": \"example.com\",\n                \"objectId\": \"NEW-LINKED-001\",\n                \"objectType\": \"service\",\n                \"name\": \"Emergency Care\"\n            },\n            \"planserviceCostShares\": {\n                \"deductible\": 500,\n                \"_org\": \"example.com\",\n                \"copay\": 100,\n                \"objectId\": \"NEW-COST-001\",\n                \"objectType\": \"membercostshare\"\n            }\n        }\n    ]\n}"
+                    },
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan/{{planId}}",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan", "{{planId}}"]
+                    },
+                    "description": "Partially update plan by adding new linked services"
+                },
+                "response": []
+            },
+            {
+                "name": "9. Check Elasticsearch Index",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Documents are indexed\", function () {",
+                                "    pm.expect(jsonData.hits.total.value).to.be.above(0);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "auth": {
+                        "type": "noauth"
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "http://localhost:9200/planindex/_search?q=*",
+                        "protocol": "http",
+                        "host": ["localhost"],
+                        "port": "9200",
+                        "path": ["planindex", "_search"],
+                        "query": [
+                            {
+                                "key": "q",
+                                "value": "*"
+                            }
+                        ]
+                    },
+                    "description": "Check if plans are indexed in Elasticsearch"
+                },
+                "response": []
+            },
+            {
+                "name": "10. Search Plan in Elasticsearch",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Found matching documents\", function () {",
+                                "    pm.expect(jsonData.hits.hits).to.be.an('array');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "auth": {
+                        "type": "noauth"
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "http://localhost:9200/planindex/_search?q=planType:inNetwork",
+                        "protocol": "http",
+                        "host": ["localhost"],
+                        "port": "9200",
+                        "path": ["planindex", "_search"],
+                        "query": [
+                            {
+                                "key": "q",
+                                "value": "planType:inNetwork"
+                            }
+                        ]
+                    },
+                    "description": "Search for specific plan types in Elasticsearch"
+                },
+                "response": []
+            },
+            {
+                "name": "11. Delete Plan",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 204\", function () {",
+                                "    pm.response.to.have.status(204);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan/{{planId}}",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan", "{{planId}}"]
+                    },
+                    "description": "Delete a plan by ID"
+                },
+                "response": []
+            },
+            {
+                "name": "12. Verify Deletion (404)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 404\", function () {",
+                                "    pm.response.to.have.status(404);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/plan/{{planId}}",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "plan", "{{planId}}"]
+                    },
+                    "description": "Verify plan is deleted - should return 404"
+                },
+                "response": []
+            },
+            {
+                "name": "13. Verify Elasticsearch Deletion",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Documents count reduced or empty\", function () {",
+                                "    // Documents should be deleted from ES",
+                                "    pm.expect(jsonData.hits.total.value).to.be.a('number');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "auth": {
+                        "type": "noauth"
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "http://localhost:9200/planindex/_search?q=objectId:{{planId}}",
+                        "protocol": "http",
+                        "host": ["localhost"],
+                        "port": "9200",
+                        "path": ["planindex", "_search"],
+                        "query": [
+                            {
+                                "key": "q",
+                                "value": "objectId:{{planId}}"
+                            }
+                        ]
+                    },
+                    "description": "Verify plan is removed from Elasticsearch index"
+                },
+                "response": []
+            }
+        ]
+    }
