@@ -1,8 +1,30 @@
-# Healthcare Plan Data Engineering Platform
+# 🏥 Healthcare Plan Data Engineering Platform
+
+> A production-grade data engineering platform demonstrating end-to-end data pipelines, real-time streaming, batch processing, and advanced analytics.
+
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue)](https://www.docker.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green)](https://nodejs.org/)
+[![Apache Airflow](https://img.shields.io/badge/Apache-Airflow-orange)](https://airflow.apache.org/)
+
+---
+
+## 📋 Table of Contents
+
+- [Architecture Overview](#-architecture-overview)
+- [Technology Stack](#-technology-stack)
+- [Quick Start Guide](#-quick-start-guide)
+- [Complete Testing Guide](#-complete-testing-guide)
+- [Data Pipelines Explained](#-data-pipelines-explained)
+- [API Documentation](#-api-documentation)
+- [Monitoring & UI Access](#-monitoring--ui-access)
+- [Troubleshooting](#-troubleshooting)
+- [Skills Demonstrated](#-skills-demonstrated)
+
+---
 
 ## 🏗️ Architecture Overview
 
-A comprehensive data engineering platform for healthcare plan management, featuring real-time analytics, ETL pipelines, data warehousing, and stream processing.
+This platform demonstrates **three core data engineering patterns**:
 
 ### Technology Stack
 

@@ -2,6 +2,7 @@ const planService = require('../../services/plan.service')
 const logger = require('../../logger/logger')
 const etag = require('etag')
 const { publishToQueue } = require('../../services/rabbitMQ')
+const { publishPlanCreated, publishPlanUpdated, publishPlanDeleted } = require('../../services/kafkaProducer')
 
 // const getPlan = async (req, res) => {
 //     logger.info(`Handling ${req.method} for ${req.originalUrl}`)
@@ -57,6 +58,12 @@ const setPlan = async (req, res) => {
                 document: data
             }
             await publishToQueue(message)
+            
+            // Publish to Kafka for real-time streaming
+            await publishPlanCreated(data).catch(err => 
+                logger.error('Kafka publish failed:', err)
+            )
+            
             res.status(201).json(data)
         }
     } catch (error) {
@@ -78,6 +85,11 @@ const deletePlan = async (req, res) => {
                     document: plan
                 }
                 await publishToQueue(message)
+                
+                // Publish delete to Kafka
+                await publishPlanDeleted(key).catch(err => 
+                    logger.error('Kafka publish failed:', err)
+                )
             }
             res.status(204).json(data)
         } else {
@@ -122,6 +134,11 @@ const updatePlan = async (req, res) => {
                 document: data
             }
             await publishToQueue(message)
+            
+            // Publish update to Kafka
+            await publishPlanUpdated(key, req.body).catch(err => 
+                logger.error('Kafka publish failed:', err)
+            )
 
             res.setHeader('ETag', etag(JSON.stringify(req.body)))
             res.status(200).json(req.body)

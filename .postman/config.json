@@ -1,0 +1,14 @@
+{
+  "workspace": {
+    "id": "de1c2e8d-e8bb-4b96-8c77-8791421e04d8"
+  },
+  "entities": {
+    "collections": [
+      "..\\postman\\collections\\Healthcare Plan API - Complete Test Suite.postman_collection.json"
+    ],
+    "environments": [],
+    "specs": [],
+    "flows": [],
+    "globals": []
+  }
+}

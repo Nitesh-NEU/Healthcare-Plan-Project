@@ -1,8 +1,8 @@
     {
         "info": {
             "_postman_id": "healthcare-plan-api",
-            "name": "Healthcare Plan API - Complete Test Suite",
-            "description": "Complete API testing collection for Healthcare Plan Management System with OAuth, MongoDB, RabbitMQ, and Elasticsearch",
+            "name": "Healthcare Plan API - Complete Test Suite with Analytics",
+            "description": "Complete API testing collection for Healthcare Plan Management System with OAuth, MongoDB, RabbitMQ, Elasticsearch, and Data Engineering Analytics (PostgreSQL, Spark, Airflow)",
             "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
         },
         "auth": {
@@ -434,7 +434,327 @@
                 "response": []
             },
             {
-                "name": "11. Delete Plan",
+                "name": "11. Analytics - Cost Trends",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has cost trends data\", function () {",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/cost-trends",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "cost-trends"]
+                    },
+                    "description": "Get cost trends analysis from PostgreSQL data warehouse"
+                },
+                "response": []
+            },
+            {
+                "name": "12. Analytics - Monthly Trends",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has monthly metrics\", function () {",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/monthly-trends?year=2025",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "monthly-trends"],
+                        "query": [
+                            {
+                                "key": "year",
+                                "value": "2025"
+                            },
+                            {
+                                "key": "planType",
+                                "value": "inNetwork",
+                                "disabled": true
+                            }
+                        ]
+                    },
+                    "description": "Get monthly plan metrics with optional filters"
+                },
+                "response": []
+            },
+            {
+                "name": "13. Analytics - Service Analysis",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has service analysis data\", function () {",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/service-analysis",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "service-analysis"]
+                    },
+                    "description": "Get comprehensive service cost analysis"
+                },
+                "response": []
+            },
+            {
+                "name": "14. Analytics - Top Services",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has top services\", function () {",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "    pm.expect(jsonData.data.length).to.be.at.most(10);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/top-services?limit=10",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "top-services"],
+                        "query": [
+                            {
+                                "key": "limit",
+                                "value": "10"
+                            }
+                        ]
+                    },
+                    "description": "Get top N most used services"
+                },
+                "response": []
+            },
+            {
+                "name": "15. Analytics - Plan Metrics",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has plan metrics summary\", function () {",
+                                "    pm.expect(jsonData.data).to.exist;",
+                                "    pm.expect(jsonData.data.total_plans).to.be.a('number');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/plan-metrics",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "plan-metrics"]
+                    },
+                    "description": "Get aggregated plan metrics summary"
+                },
+                "response": []
+            },
+            {
+                "name": "16. Analytics - Dashboard Metrics",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has comprehensive dashboard data\", function () {",
+                                "    pm.expect(jsonData.warehouse_metrics).to.exist;",
+                                "    pm.expect(jsonData.operational_metrics).to.exist;",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/dashboard",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "dashboard"]
+                    },
+                    "description": "Get comprehensive dashboard metrics from all sources"
+                },
+                "response": []
+            },
+            {
+                "name": "17. Analytics - Spark Analytics",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has Spark analytics results\", function () {",
+                                "    pm.expect(jsonData).to.be.an('object');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/spark-analytics",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "spark-analytics"]
+                    },
+                    "description": "Get Spark distributed analytics results (cost trends, anomalies, patterns)"
+                },
+                "response": []
+            },
+            {
+                "name": "18. Analytics - ETL Audit Logs",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has ETL audit logs\", function () {",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/etl-audit?limit=50",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "etl-audit"],
+                        "query": [
+                            {
+                                "key": "limit",
+                                "value": "50"
+                            }
+                        ]
+                    },
+                    "description": "Get ETL pipeline audit logs and execution history"
+                },
+                "response": []
+            },
+            {
+                "name": "19. Analytics - Data Quality Checks",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "var jsonData = pm.response.json();",
+                                "pm.test(\"Has data quality results\", function () {",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{BASE_URL}}/v1/analytics/data-quality?limit=100",
+                        "host": ["{{BASE_URL}}"],
+                        "path": ["v1", "analytics", "data-quality"],
+                        "query": [
+                            {
+                                "key": "limit",
+                                "value": "100"
+                            }
+                        ]
+                    },
+                    "description": "Get data quality validation results and statistics"
+                },
+                "response": []
+            },
+            {
+                "name": "20. Delete Plan",
                 "event": [
                     {
                         "listen": "test",
@@ -461,7 +781,7 @@
                 "response": []
             },
             {
-                "name": "12. Verify Deletion (404)",
+                "name": "21. Verify Deletion (404)",
                 "event": [
                     {
                         "listen": "test",
@@ -488,7 +808,7 @@
                 "response": []
             },
             {
-                "name": "13. Verify Elasticsearch Deletion",
+                "name": "22. Verify Elasticsearch Deletion",
                 "event": [
                     {
                         "listen": "test",

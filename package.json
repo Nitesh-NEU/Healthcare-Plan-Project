@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "consumer": "node consumer/server.js",
-    "kafka-consumer": "node kafka-services/kafka-consumer-server.js",
+    "kafka-consumer": "node kafka-services/kafka-consumer.js",
     "spark-job": "spark-submit --master spark://spark-master:7077 spark-jobs/healthcare_analytics.py",
     "validate-data": "node data-quality/validate-all.js"
   },
@@ -45,6 +45,7 @@
     "google-auth-library": "^9.2.0",
     "jsonschema": "^1.4.1",
     "kafkajs": "^2.2.4",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.0.2",
     "node-cron": "^3.0.3",
     "pg": "^8.11.3",

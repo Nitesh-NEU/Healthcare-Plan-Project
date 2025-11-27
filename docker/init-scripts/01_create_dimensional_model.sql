@@ -288,7 +288,7 @@ CREATE OR REPLACE VIEW v_current_plans_analysis AS
 SELECT 
     dp.plan_id,
     dpt.plan_type_name,
-    do.org_name,
+    do_org.org_name,
     fpc.deductible,
     fpc.copay,
     fpc.total_cost_shares,
@@ -298,7 +298,7 @@ SELECT
 FROM fact_plan_costs fpc
 JOIN dim_plan dp ON fpc.plan_key = dp.plan_key
 JOIN dim_plan_type dpt ON fpc.plan_type_key = dpt.plan_type_key
-JOIN dim_organization do ON fpc.org_key = do.org_key
+JOIN dim_organization do_org ON fpc.org_key = do_org.org_key
 JOIN dim_date dd ON fpc.creation_date_key = dd.date_key
 WHERE dp.is_current = TRUE;
 

@@ -1,6 +1,17 @@
 version: '3.8'
 services:
   # ===== EXISTING SERVICES =====
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    restart: always
+    networks:
+      - data-engineering-net
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     container_name: elasticsearch
@@ -52,11 +63,14 @@ services:
       POSTGRES_USER: dataeng
       POSTGRES_PASSWORD: dataeng123
       POSTGRES_DB: healthcare_dw
+      POSTGRES_HOST_AUTH_METHOD: md5
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: postgres -c hba_file=/etc/postgresql/pg_hba.conf
     restart: always
     networks:
       - data-engineering-net
@@ -116,14 +130,11 @@ services:
 
   # ===== APACHE SPARK =====
   spark-master:
-    image: bitnami/spark:3.5.0
+    image: apache/spark:3.5.0
     container_name: spark-master
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     environment:
-      - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
+      - SPARK_NO_DAEMONIZE=true
     ports:
       - "8081:8080"
       - "7077:7077"
@@ -135,19 +146,15 @@ services:
       - data-engineering-net
 
   spark-worker:
-    image: bitnami/spark:3.5.0
+    image: apache/spark:3.5.0
     container_name: spark-worker
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
     environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_NO_DAEMONIZE=true
       - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=2
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
     volumes:
       - spark-apps:/opt/spark-apps
       - spark-data:/opt/spark-data
@@ -185,6 +192,7 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: admin
       _AIRFLOW_WWW_USER_PASSWORD: admin
+      AIRFLOW_CONN_POSTGRES_WAREHOUSE: 'postgresql://dataeng:dataeng123@postgres-warehouse:5432/healthcare_dw'
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -209,6 +217,7 @@ services:
       AIRFLOW__CORE__FERNET_KEY: ''
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW_CONN_POSTGRES_WAREHOUSE: 'postgresql://dataeng:dataeng123@postgres-warehouse:5432/healthcare_dw'
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -232,10 +241,13 @@ services:
     volumes:
       - superset-data:/app/superset_home
     command: >
-      bash -c "superset db upgrade &&
+      bash -c "curl https://bootstrap.pypa.io/get-pip.py | /app/.venv/bin/python &&
+               /app/.venv/bin/pip install psycopg2-binary &&
+               superset db upgrade &&
                superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin &&
                superset init &&
                superset run -h 0.0.0.0 -p 8088"
+    user: root
     restart: always
     networks:
       - data-engineering-net
@@ -280,4 +292,6 @@ volumes:
   superset-data:
     driver: local
   redis-data:
+    driver: local
+  mongodb-data:
     driver: local
